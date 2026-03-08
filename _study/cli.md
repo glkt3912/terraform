@@ -1,37 +1,31 @@
 # CLI コマンド構造（internal/command の登録・実行・UI フロー）
 
-## 概要
+## なぜ CLI の構造を理解する必要があるのか？
 
-Terraform の CLI は Go の `github.com/mitchellh/cli` パッケージをベースに構築されている。
-`main.go` からコマンドが登録され、各サブコマンドが `internal/command` パッケージに実装されている。
+Terraform を深く使うと「なぜこのオプションが効かないのか」「なぜこの順序で処理されるのか」という疑問が生まれる。
+CLI の構造を理解することで、エラーメッセージの読み方・デバッグの起点・カスタム自動化の設計ができるようになる。
+
+---
 
 ## エントリーポイント
 
-```
-main.go
-  └── commands.go  (init() でコマンドマップを構築)
-        └── internal/command/xxx.go  (各サブコマンド)
+```mermaid
+graph TD
+    main["main.go\nrealMain()"]
+    commands["commands.go\nコマンドマップ構築"]
+    cli["mitchellh/cli\nCLI.Run()"]
+    command["internal/command/\n各サブコマンド"]
+    backend["Backend\nローカル or Terraform Cloud"]
+    core["terraform.Context\nCore ロジック"]
+
+    main --> commands
+    main --> cli
+    cli --> command
+    command --> backend
+    backend --> core
 ```
 
-```go
-// main.go
-func main() {
-    os.Exit(realMain())
-}
-
-func realMain() int {
-    // シグナルハンドラ設定
-    // メタデータ初期化
-    // CLI オブジェクト構築
-    cli := &cli.CLI{
-        Args:       args,
-        Commands:   Commands,  // コマンドマップ
-        HelpWriter: os.Stdout,
-    }
-    exitCode, err := cli.Run()
-    // ...
-}
-```
+---
 
 ## コマンド登録マップ
 
@@ -47,149 +41,108 @@ var Commands map[string]cli.CommandFactory = map[string]cli.CommandFactory{
     "init": func() (cli.Command, error) {
         return &command.InitCommand{Meta: meta}, nil
     },
-    // ... 全サブコマンド
+    // ...
 }
 ```
 
-## Meta 構造体（共通状態）
+**なぜ `CommandFactory`（関数）を使うのか？**
 
-全コマンドが埋め込む共通の構造体：
+コマンドを即時インスタンス化せず、実行時に生成することで、
+使用されないコマンドのメモリ割り当てを避けている。
+また、各コマンドが独立した状態を持てる。
+
+---
+
+## Meta 構造体（全コマンド共通の状態）
 
 ```go
 // internal/command/meta.go
 type Meta struct {
-    // UI
-    Ui cli.Ui  // 入出力インターフェース
-
-    // 設定
-    color            bool
-    noColor          bool
-    input            bool  // インタラクティブ入力の有無
-
-    // バックエンド
-    backendState     *legacy.BackendState
-    ContextOpts      *terraform.ContextOpts
-
-    // 作業ディレクトリ
-    WorkingDir *workdir.Dir
+    Ui         cli.Ui          // 入出力インターフェース
+    color       bool
+    noColor     bool
+    input       bool           // インタラクティブ入力の有無
+    WorkingDir  *workdir.Dir   // 作業ディレクトリ
+    ContextOpts *terraform.ContextOpts
 }
 ```
 
-## コマンド実装の基本構造
+`Meta` を全コマンドが埋め込むことで、UI・ワーキングディレクトリ・オプションを共有している。
 
-```go
-// internal/command/apply.go
-type ApplyCommand struct {
-    Meta
-}
+---
 
-func (c *ApplyCommand) Run(args []string) int {
-    // 1. フラグパース
-    cmdFlags := c.Meta.defaultFlagSet("apply")
-    // ...
-    if err := cmdFlags.Parse(args); err != nil { return 1 }
+## apply コマンドの実行フロー
 
-    // 2. Backend の初期化
-    b, backendDiags := c.Backend(&BackendOpts{...})
+```mermaid
+sequenceDiagram
+    participant User
+    participant ApplyCmd as ApplyCommand
+    participant Backend
+    participant Core as terraform.Context
+    participant Provider
 
-    // 3. Operation の構築と実行
-    opReq := c.RunOperation(b, &backend.Operation{
-        Type:      backend.OperationTypeApply,
-        PlanFile:  planFile,
-        // ...
-    })
-    return opReq.ExitCode
-}
-
-func (c *ApplyCommand) Synopsis() string {
-    return "Create or update infrastructure"
-}
-
-func (c *ApplyCommand) Help() string {
-    return strings.TrimSpace(helpTextApply)
-}
+    User->>ApplyCmd: terraform apply
+    ApplyCmd->>ApplyCmd: フラグパース\n（-auto-approve, -target 等）
+    ApplyCmd->>Backend: c.Backend() でバックエンド初期化
+    Backend-->>ApplyCmd: Backend インスタンス
+    ApplyCmd->>Backend: RunOperation(OperationTypeApply)
+    Backend->>Core: NewContext(opts)
+    Core->>Provider: プロバイダー起動
+    Core->>Core: Plan → Graph Walk → Apply
+    Core-->>Backend: 結果
+    Backend-->>ApplyCmd: RunningOperation
+    ApplyCmd-->>User: 終了コード（0 or 1 or 2）
 ```
 
-## UI インターフェース
+---
 
-```go
-// github.com/mitchellh/cli
-type Ui interface {
-    Ask(string) (string, error)      // ユーザー入力（確認プロンプト）
-    AskSecret(string) (string, error) // パスワード入力
-    Output(string)                    // 標準出力
-    Info(string)                      // 情報（stderr または色付き）
-    Error(string)                     // エラー（stderr）
-    Warn(string)                      // 警告
-}
+## UI と Views の分離
 
-// カラー出力対応
-type ColoredUi struct {
-    Ui          Ui
-    OutputColor UiColor
-    InfoColor    UiColor
-    ErrorColor   UiColor
-    WarnColor    UiColor
-}
+Terraform 1.0 以降、出力フォーマットは `views` パッケージで管理される。
+
+```mermaid
+graph TD
+    Command["ApplyCommand"]
+    View["views.Apply インターフェース"]
+    Human["views.ApplyHuman\n（人間が読む形式）"]
+    JSON["views.ApplyJSON\n（-json フラグ時）"]
+
+    Command --> View
+    View --> Human
+    View --> JSON
 ```
 
-## Views（出力フォーマット）
+**なぜ Human と JSON を分けるのか？**
 
-Terraform 1.0+ では出力を `views` パッケージで管理し、Human 形式と JSON 形式を切り替えられる：
-
-```go
-// internal/command/views/
-type Apply interface {
-    Operation() Operation
-    Hooks() []terraform.Hook
-    Diagnostics(tfdiags.Diagnostics)
-    HelpPrompt()
-}
-
-// JSON 出力モード（-json フラグ）
-type ApplyJSON struct { ... }
-
-// Human 読み取り可能な出力
-type ApplyHuman struct { ... }
-```
+CI パイプラインやモニタリングツールは JSON を parseしやすい。
+人間はカラー付きのテキストを読みやすい。
+インターフェースで抽象化することで、コマンドのロジックを変えずに出力形式を切り替えられる。
 
 ```bash
-terraform apply -json   # 機械可読な JSON ストリーム出力
-terraform plan -json    # Plan を JSON で出力
+terraform apply -json 2>&1 | jq '.changes.add'
 ```
 
-## Operation の実行フロー
-
-```
-CLI コマンド
-  → backend.Operation を構築
-  → b.Operation(ctx, op) を呼び出し
-       ↓
-  ローカルバックエンド (backend/local)
-  → opApply() / opPlan()
-       ↓
-  terraform.NewContext(opts)    // Terraform Core の Context 生成
-  → ctx.Plan() または ctx.Apply()
-       ↓
-  Graph Build → Graph Walk → Provider RPC
-```
+---
 
 ## ワーキングディレクトリの管理
 
-```go
-// internal/command/workdir/dir.go
-type Dir struct {
-    mainDir        string   // -chdir または カレントディレクトリ
-    dataDir        string   // .terraform/ ディレクトリ
-    overrideDataDir string
-}
-
-// .terraform/ 配下の主要ファイル
-// .terraform/terraform.tfstate  → バックエンド設定
-// .terraform/providers/         → Provider バイナリキャッシュ
-// .terraform/modules/           → Module ダウンロードキャッシュ
-// .terraform.lock.hcl           → Provider バージョンロック
 ```
+.terraform/
+├── terraform.tfstate       # バックエンド設定（≠ リソースの State）
+├── providers/              # Provider バイナリキャッシュ
+│   └── registry.terraform.io/hashicorp/aws/5.0.0/linux_amd64/
+│       └── terraform-provider-aws_v5.0.0
+└── modules/                # Module ダウンロードキャッシュ
+    ├── modules.json        # モジュールマニフェスト
+    └── network/            # ダウンロード済みモジュール
+.terraform.lock.hcl         # Provider バージョンロック
+```
+
+**`.terraform/` を git に入れてはいけない理由:**
+バイナリ（Provider プラグイン）が含まれるため容量が大きい。
+かつプラットフォーム（linux/darwin/windows）依存のバイナリなので、環境間で共有できない。
+
+---
 
 ## 主要コマンド一覧
 
@@ -206,16 +159,58 @@ type Dir struct {
 | `show` | `command/show.go` | State/planfile の表示 |
 | `graph` | `command/graph.go` | 依存グラフの DOT 形式出力 |
 | `fmt` | `command/fmt.go` | HCL フォーマット |
-| `test` | `command/test.go` | terraform test 実行（1.6+） |
-| `workspace` | `command/workspace*.go` | Workspace 管理 |
+| `test` | `command/test.go` | `terraform test` 実行（1.6+） |
 
-## 終了コード
+---
+
+## 終了コードと CI での使い方
 
 | コード | 意味 |
 |--------|------|
-| `0` | 成功 |
+| `0` | 成功（または変更なし） |
 | `1` | エラー |
 | `2` | `plan -detailed-exitcode` で変更あり |
+
+```bash
+# CI でのパターン
+terraform plan -detailed-exitcode
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -eq 1 ]; then
+  echo "Plan エラー"
+  exit 1
+elif [ $EXIT_CODE -eq 2 ]; then
+  echo "変更あり: PR にコメント or 手動承認フローへ"
+fi
+```
+
+---
+
+## 環境変数によるデバッグ
+
+| 環境変数 | 効果 |
+|---------|------|
+| `TF_LOG=DEBUG` | 詳細ログを stderr に出力 |
+| `TF_LOG=TRACE` | gRPC の通信内容まで出力（非常に詳細） |
+| `TF_LOG_PATH=/tmp/tf.log` | ログをファイルに出力 |
+| `TF_INPUT=false` | インタラクティブ入力を無効化（CI 向け） |
+| `TF_CLI_ARGS_plan="-no-color"` | サブコマンドにデフォルト引数を追加 |
+| `CHECKPOINT_DISABLE=1` | バージョンチェックを無効化 |
+
+---
+
+## 運用・障害の観点
+
+| シナリオ | 症状 | 対処 |
+|---------|------|------|
+| `init` が毎回遅い | Provider ダウンロードに時間がかかる | CI で `.terraform/` をキャッシュする |
+| CI でインタラクティブ入力を求められる | `terraform apply` がハングする | `TF_INPUT=false` または `-auto-approve` を設定 |
+| Provider ハッシュ不一致 | `registry.terraform.io ... hash mismatch` | `terraform providers lock -platform=linux_amd64` で CI 用ハッシュを追加 |
+| JSON 出力が途切れる | `-json` フラグで不完全な JSON が出る | stderr と stdout が混在している。`2>/dev/null` で分離 |
+
+> **監視指標**: CI での `terraform plan` の実行時間をトラッキングする。増加傾向があれば Provider の `ReadResource`（refresh）が遅い、またはリソース数の増大が原因。`-refresh=false` で refresh をスキップして Plan 速度を改善できるが、State ドリフトを検出できなくなるトレードオフがある。
+
+---
 
 ## 関連パッケージ
 
