@@ -111,6 +111,16 @@
       "industry": ["IT"],
       "topics": ["CLI", "command", "Meta", "Ui", "views", "Operation", "workdir", "mitchellh/cli"],
       "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "go-for-nodejs-devs",
+      "path": "_study/go-for-nodejs-devs.md",
+      "title": "Go 入門（Node.js/NestJS 開発者向け）",
+      "description": "TypeScript/NestJS との対比で Go を解説。暗黙的インターフェース・error 戻り値パターン・goroutine と Promise.all の対比・ポインタと参照渡し・defer による後処理・Terraform コード頻出パターン（Factory/Transformer/OptionsStruct）・Goツールチェーン基礎",
+      "tags": ["Go", "Node.js", "NestJS", "TypeScript", "入門"],
+      "industry": ["IT"],
+      "topics": ["Go", "interface", "goroutine", "error", "pointer", "struct", "channel", "defer", "TypeScript比較"],
+      "updatedAt": "2026-03-09"
     }
   ]
 }
