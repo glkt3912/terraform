@@ -81,6 +81,36 @@
       "industry": ["IT"],
       "topics": ["addrs", "plans", "states", "configs", "cty", "tainted", "deposed", "lineage", "serial", "workspace"],
       "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "graph",
+      "path": "_study/graph.md",
+      "title": "依存グラフ（DAG walk アルゴリズム・並列実行・サイクル検出）",
+      "description": "dag パッケージの基本構造（Graph/AcyclicGraph/Walker）・GraphTransformer による段階的グラフ構築・トポロジカル並列 Walk アルゴリズム・Tarjan 法によるサイクル検出・Apply/Destroy Graph の違い・terraform graph コマンドの DOT 出力",
+      "tags": ["Graph", "DAG", "並列実行", "サイクル検出"],
+      "industry": ["IT"],
+      "topics": ["DAG", "Graph", "Walker", "GraphTransformer", "parallel", "cycle", "topology", "goroutine"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "lifecycle",
+      "path": "_study/lifecycle.md",
+      "title": "リソースライフサイクル（create_before_destroy・ignore_changes・precondition/postcondition）",
+      "description": "create_before_destroy の Deposed フロー・prevent_destroy の Plan 時チェック・ignore_changes の属性上書き動作・replace_triggered_by の強制 Replace・precondition（Plan 時評価）と postcondition（Apply 後評価）の違い・variable validation との比較",
+      "tags": ["lifecycle", "create_before_destroy", "ignore_changes", "precondition"],
+      "industry": ["IT"],
+      "topics": ["lifecycle", "create_before_destroy", "Deposed", "prevent_destroy", "ignore_changes", "replace_triggered_by", "precondition", "postcondition"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "cli",
+      "path": "_study/cli.md",
+      "title": "CLI コマンド構造（internal/command の登録・実行・UI フロー）",
+      "description": "main.go からのエントリーポイント・mitchellh/cli によるコマンド登録マップ・Meta 構造体の共通状態・UI インターフェースとカラー出力・views パッケージの Human/JSON 出力切り替え・Operation 実行フロー・主要コマンド一覧と終了コード",
+      "tags": ["CLI", "コマンド", "UI", "Operation"],
+      "industry": ["IT"],
+      "topics": ["CLI", "command", "Meta", "Ui", "views", "Operation", "workdir", "mitchellh/cli"],
+      "updatedAt": "2026-03-08"
     }
   ]
 }
