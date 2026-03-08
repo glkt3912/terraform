@@ -18,6 +18,8 @@ go.work*
 
 /terraform
 
+.mcp.json
+
 vendor/
 
 # Coverage

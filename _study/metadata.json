@@ -1,0 +1,86 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-03-08",
+  "documents": [
+    {
+      "id": "architecture",
+      "path": "_study/architecture.md",
+      "title": "Terraform Core アーキテクチャ全体像",
+      "description": "CLI/Core/Provider/State の全体フロー・主要コンポーネント構成・Go 内部パッケージ一覧・terraform apply の8ステップ処理フロー・Provider/Resource/State/Module の4概念・各詳細ドキュメントへのリンク",
+      "tags": ["アーキテクチャ", "概要", "CLI", "Provider", "State", "Module"],
+      "industry": ["IT"],
+      "topics": ["Core", "Provider", "State", "Graph", "Plan", "Apply", "HCL", "Backend", "addrs", "configs"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "provider",
+      "path": "_study/provider.md",
+      "title": "プロバイダープラグイン（gRPC プロトコル・Plugin Protocol）",
+      "description": "Provider が独立プロセスとして動作する仕組み・Plugin Protocol v5/v6 の違い・gRPC RPC 一覧（GetProviderSchema/PlanResourceChange/ApplyResourceChange 等）・cty 型システム・Provider インストールフロー",
+      "tags": ["Provider", "gRPC", "Plugin", "プロトコル"],
+      "industry": ["IT"],
+      "topics": ["Provider", "gRPC", "protobuf", "cty", "Plugin Protocol", "tfplugin6", "schema"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "state",
+      "path": "_study/state.md",
+      "title": "ステート管理（tfstate 構造・Remote Backend・Locking）",
+      "description": "tfstate の JSON 構造詳細・serial/lineage/deposed の意味・Go の State 型（states.State/Resource/ResourceInstance）・Remote Backend と State 保存フロー・DynamoDB/GCS/Blob によるロック機構・Terraform 1.7+ の State 暗号化",
+      "tags": ["State", "tfstate", "Backend", "Locking", "DynamoDB"],
+      "industry": ["IT"],
+      "topics": ["State", "tfstate", "serial", "lineage", "deposed", "locking", "S3", "GCS", "encryption"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "plan-apply",
+      "path": "_study/plan-apply.md",
+      "title": "Plan/Apply ライフサイクル（diff 計算・変更適用の内部フロー）",
+      "description": "terraform plan の全体フロー・DAG グラフ構築（planGraphBuilder）・PlanResourceChange RPC の動作・変更アクション種別（Create/Update/Delete/Replace）・Apply フェーズのグラフ Walk・planfile の構造",
+      "tags": ["Plan", "Apply", "Graph", "DAG", "フロー"],
+      "industry": ["IT"],
+      "topics": ["Plan", "Apply", "Graph", "DAG", "PlanResourceChange", "ApplyResourceChange", "topolgy", "parallel"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "modules",
+      "path": "_study/modules.md",
+      "title": "モジュールシステム（モジュール解決・変数・出力の伝播）",
+      "description": "モジュールのソース種別（ローカル/Registry/Git/S3）・内部アドレス体系（addrs.Module/ModuleInstance）・Config ロード時の解決フロー・変数と Output の伝播・for_each/count によるインスタンス化・Go の Config 型構造",
+      "tags": ["Module", "変数", "Output", "for_each", "count"],
+      "industry": ["IT"],
+      "topics": ["Module", "ModuleInstance", "variable", "output", "source", "for_each", "count", "configs"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "expressions",
+      "path": "_study/expressions.md",
+      "title": "式と関数（HCL 評価・depends_on・for_each）",
+      "description": "HCL 式評価エンジン（internal/lang）・参照できるオブジェクト一覧・条件式・for 式・splat 式・for_each の内部動作・depends_on の依存グラフへの影響・組み込み関数カテゴリ・dynamic ブロック",
+      "tags": ["HCL", "式", "関数", "for_each", "depends_on"],
+      "industry": ["IT"],
+      "topics": ["HCL", "expression", "for_each", "depends_on", "function", "cty", "dynamic", "locals", "splat"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "backends",
+      "path": "_study/backends.md",
+      "title": "バックエンド設定（S3/GCS/Consul の仕組み）",
+      "description": "Backend の2つの役割（State Storage と Operations）・S3 バックエンドの DynamoDB ロック実装・GCS の楽観的ロック・Consul Session ロック・Terraform Cloud バックエンド・バックエンド初期化と State 移行フロー・Workspace サポート",
+      "tags": ["Backend", "S3", "GCS", "Consul", "Locking"],
+      "industry": ["IT"],
+      "topics": ["Backend", "S3", "GCS", "Consul", "azurerm", "Terraform Cloud", "workspace", "lock", "init"],
+      "updatedAt": "2026-03-08"
+    },
+    {
+      "id": "glossary",
+      "path": "_study/glossary.md",
+      "title": "用語集（Terraform 内部コードの型・概念一覧）",
+      "description": "addrs パッケージの全型（AbsResource/ModuleInstance/InstanceKey 等）・plans パッケージの型（Plan/Changes/Action）・states パッケージの型（State/ResourceInstance/DeposedKey）・cty の値表現（NullVal/UnknownVal）・重要概念（Tainted/Deposed/Lineage 等）",
+      "tags": ["用語集", "型", "addrs", "cty", "概念"],
+      "industry": ["IT"],
+      "topics": ["addrs", "plans", "states", "configs", "cty", "tainted", "deposed", "lineage", "serial", "workspace"],
+      "updatedAt": "2026-03-08"
+    }
+  ]
+}
