@@ -121,6 +121,46 @@
       "industry": ["IT"],
       "topics": ["Go", "interface", "goroutine", "error", "pointer", "struct", "channel", "defer", "TypeScript比較"],
       "updatedAt": "2026-03-09"
+    },
+    {
+      "id": "import",
+      "path": "_study/import.md",
+      "title": "import ブロックと terraform import（既存リソースの取り込み）",
+      "description": "terraform import コマンド（旧方式）と import ブロック（1.5+）の違い・ImportResourceState RPC のフロー・-generate-config-out による HCL 自動生成・for_each を使った一括 import・旧コマンド方式との使い分け",
+      "tags": ["import", "既存リソース", "State"],
+      "industry": ["IT"],
+      "topics": ["import", "ImportResourceState", "generate-config-out", "for_each", "State"],
+      "updatedAt": "2026-03-09"
+    },
+    {
+      "id": "testing",
+      "path": "_study/testing.md",
+      "title": "terraform test（1.6+ テストフレームワーク）",
+      "description": "HCL ネイティブテストフレームワーク・.tftest.hcl の構造・run ブロックの実行フロー・モックプロバイダー（1.7+）による実リソース不要テスト・run ブロック間の State 共有・CI でのコスト最適化パターン",
+      "tags": ["test", "tftest", "mock", "CI"],
+      "industry": ["IT"],
+      "topics": ["terraform test", "tftest", "mock_provider", "assert", "run", "moduletest"],
+      "updatedAt": "2026-03-09"
+    },
+    {
+      "id": "moved",
+      "path": "_study/moved.md",
+      "title": "moved ブロック（State リファクタリング）",
+      "description": "リソースアドレス変更時のダウンタイムを防ぐ moved ブロック・count から for_each への移行パターン・モジュール化時の State 移行・removed ブロック（1.7+）・ApplyMoves() の内部実装・チームでの運用タイミング",
+      "tags": ["moved", "リファクタリング", "State", "for_each"],
+      "industry": ["IT"],
+      "topics": ["moved", "removed", "refactoring", "count", "for_each", "State", "ApplyMoves"],
+      "updatedAt": "2026-03-09"
+    },
+    {
+      "id": "ephemeral",
+      "path": "_study/ephemeral.md",
+      "title": "Ephemeral Values（一時値・write-only 属性）",
+      "description": "State に保存されない値を扱う Ephemeral Values（1.10+）・ephemeral resource と OpenEphemeral/CloseEphemeral RPC・write-only 属性とバージョントリガー・cty marks による実装・sensitive との違い・Vault 等のシークレット管理との連携",
+      "tags": ["ephemeral", "セキュリティ", "write-only", "sensitive"],
+      "industry": ["IT"],
+      "topics": ["ephemeral", "write-only", "marks", "sensitive", "Vault", "OpenEphemeral", "State"],
+      "updatedAt": "2026-03-09"
     }
   ]
 }
